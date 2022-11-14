@@ -1,7 +1,7 @@
 const {assert} = require('chai');
 const {utils, wallets} = require('@aeternity/aeproject');
 
-const EXAMPLE_CONTRACT_SOURCE = './contracts/ExampleContract.aes';
+const EXAMPLE_CONTRACT_SOURCE = './contracts/AensMarketContact.aes';
 
 describe('PutRevoked Test', () => {
     let aeSdk;

@@ -2,7 +2,7 @@ const {assert} = require('chai');
 const {utils, wallets} = require('@aeternity/aeproject');
 const {AmountFormatter} = require('@aeternity/aepp-sdk');
 
-const EXAMPLE_CONTRACT_SOURCE = './contracts/ExampleContract.aes';
+const EXAMPLE_CONTRACT_SOURCE = './contracts/AensMarketContact.aes';
 
 describe('Put Raise Deal Test', () => {
     let aeSdk;
@@ -46,18 +46,25 @@ describe('Put Raise Deal Test', () => {
     //   assert.equal(decodedResult, 42);
     // });
 
-
+    //注册
     it('ClaimName: ' + name, async () => {
         const preClaim = await aeSdk.aensPreclaim(name);
         await preClaim.claim();
     })
 
+    //生成签名
     it('CreateAensDelegationSignature', async () => {
         delegationSignature = await aeSdk.createAensDelegationSignature({
             contractId: contractId,
             name: name,
         });
         assert.ok(true);
+    })
+
+    //
+    it('addTradableAddress', async () => {
+        let {decodedResult: address} = await contract.methods.add_tradable_address( wallets[0].publicKey,"wallets[0].publicKey");
+        assert.equal(address, wallets[0].publicKey);
     })
 
     it('AensMarketContract: PutName: ' + name, async () => {
@@ -73,7 +80,7 @@ describe('Put Raise Deal Test', () => {
     })
     it('AensMarketContract: RaiseName: ' + name, async () => {
 
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 10; i++) {
 
             //get name order
             let {decodedResult: nameOrder} = await contract.methods.get_name_order(name);
@@ -88,10 +95,13 @@ describe('Put Raise Deal Test', () => {
 
 
             let {decodedResult: nameOrderNew} = await contract.methods.get_name_order(name);
-            console.log("           currentAmount___________________________ " + AmountFormatter.toAe(Number(nameOrderNew.current_amount)));
-            console.log("           leftAmount______________________________ " + AmountFormatter.toAe(Number(nameOrderNew.left_amount)));
-            console.log("           nextRaiseAmount_________________________ " + AmountFormatter.toAe(Number(nextNameRaisePrice)));
-            console.log("           bonusFee________________________________ " + AmountFormatter.toAe(Number(decodedEvents[0].args[2])));
+
+            let balance = await aeSdk.getBalance( contractId.replaceAll("ct_","ak_"));
+            console.log("           当前卖方可领取数量___________________________ " + AmountFormatter.toAe(Number(nameOrderNew.current_amount)));
+            console.log("           本次加价____________________________________ " + AmountFormatter.toAe(Number(nameOrderNew.left_amount)));
+            // console.log("           nextRaiseAmount_________________________ " + AmountFormatter.toAe(Number(nextNameRaisePrice)));
+            console.log("           手续费分红__________________________________ " + AmountFormatter.toAe(Number(decodedEvents[0].args[2])));
+            console.log("           合约余额____________________________________ " + AmountFormatter.toAe(balance));
             console.log("           ");
         }
 
@@ -99,7 +109,7 @@ describe('Put Raise Deal Test', () => {
 
 
     it('AensMarketContract: DealName: ' + name, async () => {
-        await utils.awaitKeyBlocks(aeSdk, 10);
+        await utils.awaitKeyBlocks(aeSdk, 200);
         const {result} = await contract.methods.deal_name(name);
         assert.equal(result.returnType, 'ok');
     })
@@ -108,6 +118,8 @@ describe('Put Raise Deal Test', () => {
     it('AensMarketContract: GetState', async () => {
         const {decodedResult: get_state} = await contract.methods.get_state();
         console.log(get_state);
+        let balance = await aeSdk.getBalance( contractId.replaceAll("ct_","ak_"));
+        console.log("           合约余额____________________________________ " + AmountFormatter.toAe(balance));
     });
 })
 
